@@ -10,7 +10,7 @@ fi
 
 if [ "$TRAVIS_NODE_VERSION" != "6.9.1" ]
 then
-  echo "Skipping converage publish for TRAVIS_NODE_VERSION ${TRAVIS_NODE_VERSION}"
+  echo "Skipping coverage publish for TRAVIS_NODE_VERSION ${TRAVIS_NODE_VERSION}"
   exit 0
 fi
 
