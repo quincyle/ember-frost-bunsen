@@ -10,13 +10,15 @@
 
 # misc
 /.sass-cache
+/.idea
 /connect.lock
 /coverage/*
 /libpeerconnection.log
-coverage.json
 npm-debug.log*
 testem.log
-.idea
-ge.json
+coverage.json
 .DS_Store
-jsconfig.json
+/typings/*
+.vscode
+**.ember-try
+yarn.lock

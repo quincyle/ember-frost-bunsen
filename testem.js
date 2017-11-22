@@ -1,5 +1,5 @@
 /* eslint-env node */
-const Reporter = require('ember-test-utils/reporter')
+var Reporter = require('ember-test-utils/reporter')
 
 module.exports = {
   disable_watching: true,
