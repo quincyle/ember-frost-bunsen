@@ -1,5 +1,6 @@
+import {expect} from 'chai'
 import Ember from 'ember'
-const {merge} = Ember
+const {RSVP, merge, run} = Ember
 import {initialize as initializeHook} from 'ember-hook'
 import {setupComponentTest} from 'ember-mocha'
 import wait from 'ember-test-helpers/wait'
@@ -49,6 +50,7 @@ export function renderDetailComponent () {
     bunsenModel=bunsenModel
     bunsenView=bunsenView
     hook=hook
+    plugins=plugins
     selectedTabLabel=selectedTabLabel
     value=value
   }}`)
@@ -67,8 +69,10 @@ export function renderFormComponent () {
     mergeDefaults=mergeDefaults
     onChange=onChange
     onValidation=onValidation
+    plugins=plugins
     selectedTabLabel=selectedTabLabel
     showAllErrors=showAllErrors
+    validators=validators
     value=value
   }}`)
 }
@@ -87,8 +91,10 @@ export function renderFormComponentWithSelectOutlet () {
       hook=hook
       onChange=onChange
       onValidation=onValidation
+      plugins=plugins
       selectedTabLabel=selectedTabLabel
       showAllErrors=showAllErrors
+      validators=validators
       value=value
     }}
   `)
@@ -174,4 +180,28 @@ export function setupFormComponentTestWithSelectOutlet (props) {
     props,
     renderer: renderFormComponentWithSelectOutlet
   })
+}
+
+/**
+ * Used to test against an exception being thrown in an async run loop
+ * @param {Function} func - code to invoke the error
+ * @param {String} message - the exception message to match
+ * @returns {RSVP.Promise} a promise that would resolve when an exception matches the message
+ */
+export function expectAsyncThrow (func, message) {
+  const promise = new RSVP.Promise((resolve) => {
+    run(func)
+
+    run.later(() => {
+      resolve()
+    })
+  })
+
+  return promise
+    .then(() => {
+      throw new Error('An exception was expected')
+    })
+    .catch((err) => {
+      expect(err.message).to.equal(message)
+    })
 }

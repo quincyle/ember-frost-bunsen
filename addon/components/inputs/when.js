@@ -1,5 +1,5 @@
 import Ember from 'ember'
-const {$, get, guidFor, run} = Ember
+const {$, get, guidFor, isPresent, run} = Ember
 import computed, {readOnly} from 'ember-computed-decorators'
 import {PropTypes} from 'ember-prop-types'
 import moment from 'moment'
@@ -116,22 +116,33 @@ export default AbstractInput.extend({
   init () {
     this._super(...arguments)
 
-    const currentDateTime = moment()
+    const firstButtonValue = get(this, 'cellConfig.renderer.value')
+    const value = this.get('value')
+
+    let selectedValue = firstButtonValue
+    let currentDateTime = moment()
+
+    if (isPresent(value) && value !== firstButtonValue) {
+      selectedValue = DATE_VALUE
+      currentDateTime = value
+    }
+
     const date = moment(currentDateTime).format(this.get('dateFormat'))
     const time = moment(currentDateTime).format(this.get('timeFormat'))
-    const firstButtonValue = get(this, 'cellConfig.renderer.value')
 
     this.setProperties({
       date,
       firstButtonValue,
-      selectedValue: firstButtonValue,
+      selectedValue,
       storedDateTimeValue: moment(currentDateTime).format(this.get('dateTimeFormat')),
       time
     })
 
-    run.later(() => {
-      this.onChange(this.get('bunsenId'), firstButtonValue)
-    })
+    if (!isPresent(value)) {
+      run.schedule('afterRender', () => {
+        this.onChange(this.get('bunsenId'), firstButtonValue)
+      })
+    }
   },
 
   /**
@@ -141,7 +152,7 @@ export default AbstractInput.extend({
   didInsertElement () {
     this._super(...arguments)
 
-    this._setDisabled(true)
+    this._setDisabled(this.get('selectedValue') === this.get('firstButtonValue'))
   },
 
   /**
@@ -177,18 +188,21 @@ export default AbstractInput.extend({
       } else if (value === DATE_VALUE) {
         newValue = this.get('storedDateTimeValue')
       } else {
-        newValue = moment(value).format(this.get('dateTimeFormat'))
+        return
       }
-
-      this.onChange(this.get('bunsenId'), newValue)
 
       // If the value of the button did not change for an existing value we don't want to track it
-      if (value === firstButtonValue || value === DATE_VALUE) {
+      const radioValues = [firstButtonValue, DATE_VALUE]
+      if (radioValues.includes(value)) {
         this.set('selectedValue', value)
-
         // Disable the date-time-picker when it's radio button is not selected
-        this._setDisabled(value === firstButtonValue)
+        this._setDisabled(newValue === firstButtonValue)
       }
+
+      // protecting against initial render onChange
+      run.schedule('afterRender', () => {
+        this.onChange(this.get('bunsenId'), newValue)
+      })
     },
 
     /**
